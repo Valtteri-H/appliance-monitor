@@ -5,33 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-10-12
+
+### Added
+- `hacs.json` for HACS validation.
+- `services.yaml` describing `delete_program` and `clear_history` services and required fields.
+- `starting_delay` configuration field in Config Flow and Options Flow.
+- Validation rejecting identical power and energy sensor selections, or starting threshold below finishing threshold.
+- Actionable notification listener (`mobile_app_notification_action`) for program confirmation actions.
+- `SensorDeviceClass.ENUM` for status and phase sensors.
+
+### Changed
+- `manifest.json`: updated `iot_class` to `calculated`.
+- `profile_engine.py`: capped cycle history at 100 entries to prevent unbounded storage growth.
+- `coordinator.py`: monotonic time tracking to prevent clock drift issues, and non-negative clamping on incoming power values.
+- `__init__.py`: added `asyncio.Lock` around store writes and protected notification dispatch from exceptions.
+
 ## [1.0.0] - 2026-10-12
 
 ### Added
-- **Power Signature Engine (`profile_engine.py`):**
-  - Adaptive cycle profiling based on heating energy, motor spin phases, and pulse characteristics.
-  - Automatic wash program matching with confidence scores.
-  - Real-time remaining cycle time estimation (ETA).
-- **Failsafe State Machine (`coordinator.py`):**
-  - Robust noise and transient spike filtering.
-  - Soaking and pause phase handling (`paused`) preventing premature cycle finish notifications.
-- **Entity Suite:**
-  - `sensor.<appliance>_status` (`idle`, `running`, `paused`, `finished`).
-  - `sensor.<appliance>_phase` (`weighing`, `heating`, `rinsing`, `spinning`, `drying`).
-  - `sensor.<appliance>_program` (detected or confirmed program name).
-  - `sensor.<appliance>_remaining_time` (estimated minutes left).
-  - `sensor.<appliance>_cycle_duration` (active or last cycle duration in minutes).
-  - `sensor.<appliance>_cycle_energy` (active or last cycle energy consumption in kWh).
-  - `binary_sensor.<appliance>_running` (simple on/off state for automations).
-  - `select.<appliance>_program_select` (interactive UI selector to teach or confirm programs).
-  - `button.<appliance>_reset` (manual reset to idle state).
-  - `button.<appliance>_forget_last` (delete misclassified cycle from learned history).
-- **Interactive Notifications (`notifications.py`):**
-  - Actionable mobile notifications upon cycle finish with quick-select buttons for program verification.
-- **Home Assistant Services:**
-  - `appliance_monitor.delete_program` (remove learned program profile).
-  - `appliance_monitor.clear_history` (reset all recorded cycle histories).
-- **UI Configuration:**
-  - Full Config Flow and Options Flow with multi-language support (English and Finnish).
-- **Testing & Quality Assurance:**
-  - Unit and integration tests covering cycle tracking, signature learning, and event flows.
+- Power signature profiling for heating cycles and spin stages.
+- State machine for cycle detection and pause handling.
+- Sensors for status, phase, program, remaining time, duration, and energy.
+- Config Flow and Options Flow with English and Finnish translations.
+- Actionable mobile notifications.
+- Services for profile deletion and history resets.
+- Unit and integration tests.

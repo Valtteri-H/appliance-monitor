@@ -5,6 +5,7 @@ class SensorDeviceClass(StrEnum):
     DURATION = "duration"
     ENERGY = "energy"
     POWER = "power"
+    ENUM = "enum"
 
 class SensorStateClass(StrEnum):
     MEASUREMENT = "measurement"

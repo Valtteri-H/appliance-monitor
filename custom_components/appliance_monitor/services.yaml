@@ -1,0 +1,30 @@
+delete_program:
+  name: Delete Program
+  description: Remove a learned program profile and its cycle history for an appliance.
+  fields:
+    entry_id:
+      name: Appliance Entry ID
+      description: The config entry ID of the appliance.
+      required: true
+      selector:
+        config_entry:
+          integration: appliance_monitor
+    program_name:
+      name: Program Name
+      description: Name of the program profile to delete.
+      required: true
+      example: "Eco 40-60"
+      selector:
+        text:
+
+clear_history:
+  name: Clear History
+  description: Clear all learning data and cycle history for an appliance.
+  fields:
+    entry_id:
+      name: Appliance Entry ID
+      description: The config entry ID of the appliance.
+      required: true
+      selector:
+        config_entry:
+          integration: appliance_monitor

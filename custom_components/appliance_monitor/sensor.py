@@ -15,7 +15,21 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    PHASE_DRYING,
+    PHASE_IDLE,
+    PHASE_RINSING,
+    PHASE_SPINNING,
+    PHASE_UNKNOWN,
+    PHASE_WASHING_HEATING,
+    PHASE_WEIGHING,
+    STATE_FINISHED,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_RUNNING,
+)
 
 
 async def async_setup_entry(
@@ -58,11 +72,13 @@ class ApplianceBaseEntity(CoordinatorEntity):
 class ApplianceStatusSensor(ApplianceBaseEntity, SensorEntity):
     """Current cycle status (idle, running, paused, finished)."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_translation_key = "status"
 
     def __init__(self, coordinator: Any, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_status"
+        self._attr_options = [STATE_OFF, STATE_IDLE, STATE_RUNNING, STATE_PAUSED, STATE_FINISHED]
 
     @property
     def native_value(self) -> str:
@@ -73,11 +89,21 @@ class ApplianceStatusSensor(ApplianceBaseEntity, SensorEntity):
 class AppliancePhaseSensor(ApplianceBaseEntity, SensorEntity):
     """Current wash/cycle phase (weighing, heating, spinning, etc)."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_translation_key = "phase"
 
     def __init__(self, coordinator: Any, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_phase"
+        self._attr_options = [
+            PHASE_IDLE,
+            PHASE_WEIGHING,
+            PHASE_WASHING_HEATING,
+            PHASE_RINSING,
+            PHASE_SPINNING,
+            PHASE_DRYING,
+            PHASE_UNKNOWN,
+        ]
 
     @property
     def native_value(self) -> str:

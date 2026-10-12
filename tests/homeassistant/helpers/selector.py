@@ -21,6 +21,10 @@ class NumberSelector:
     def __init__(self, config=None):
         pass
 
+class NumberSelectorMode:
+    BOX = "box"
+    SLIDER = "slider"
+
 class NumberSelectorConfig:
     def __init__(self, **kwargs):
         pass

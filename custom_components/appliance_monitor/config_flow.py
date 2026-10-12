@@ -17,10 +17,12 @@ from .const import (
     CONF_FINISHING_POWER,
     CONF_NOTIFY_SERVICE,
     CONF_POWER_SENSOR,
+    CONF_STARTING_DELAY,
     CONF_STARTING_POWER,
     DEFAULT_FINISHING_DELAY,
     DEFAULT_FINISHING_POWER,
     DEFAULT_NOTIFY_SERVICE,
+    DEFAULT_STARTING_DELAY,
     DEFAULT_STARTING_POWER,
     DOMAIN,
     TYPE_CUSTOM,
@@ -44,12 +46,22 @@ class ApplianceMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Check unique name / power sensor
-            await self.async_set_unique_id(user_input[CONF_POWER_SENSOR])
-            self._abort_if_unique_id_configured()
+            starting = user_input.get(CONF_STARTING_POWER, DEFAULT_STARTING_POWER)
+            finishing = user_input.get(CONF_FINISHING_POWER, DEFAULT_FINISHING_POWER)
+            if starting <= finishing:
+                errors["base"] = "invalid_power_thresholds"
+            elif (
+                user_input.get(CONF_ENERGY_SENSOR)
+                and user_input.get(CONF_ENERGY_SENSOR) == user_input.get(CONF_POWER_SENSOR)
+            ):
+                errors["base"] = "same_sensor"
+            else:
+                # Check unique name / power sensor
+                await self.async_set_unique_id(user_input[CONF_POWER_SENSOR])
+                self._abort_if_unique_id_configured()
 
-            title = user_input.get("name", "Appliance")
-            return self.async_create_entry(title=title, data=user_input)
+                title = user_input.get("name", "Appliance")
+                return self.async_create_entry(title=title, data=user_input)
 
         data_schema = vol.Schema(
             {
@@ -76,17 +88,30 @@ class ApplianceMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_STARTING_POWER, default=DEFAULT_STARTING_POWER
                 ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(min=1.0, max=500.0, step=1.0, unit_of_measurement="W")
+                    selector.NumberSelectorConfig(
+                        min=1.0, max=500.0, step=1.0, unit_of_measurement="W", mode=selector.NumberSelectorMode.BOX
+                    )
                 ),
                 vol.Optional(
                     CONF_FINISHING_POWER, default=DEFAULT_FINISHING_POWER
                 ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(min=0.5, max=50.0, step=0.5, unit_of_measurement="W")
+                    selector.NumberSelectorConfig(
+                        min=0.5, max=50.0, step=0.5, unit_of_measurement="W", mode=selector.NumberSelectorMode.BOX
+                    )
+                ),
+                vol.Optional(
+                    CONF_STARTING_DELAY, default=DEFAULT_STARTING_DELAY
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=5, max=600, step=5, unit_of_measurement="s", mode=selector.NumberSelectorMode.BOX
+                    )
                 ),
                 vol.Optional(
                     CONF_FINISHING_DELAY, default=DEFAULT_FINISHING_DELAY
                 ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(min=30, max=1800, step=10, unit_of_measurement="s")
+                    selector.NumberSelectorConfig(
+                        min=30, max=1800, step=10, unit_of_measurement="s", mode=selector.NumberSelectorMode.BOX
+                    )
                 ),
                 vol.Optional(
                     CONF_NOTIFY_SERVICE, default=DEFAULT_NOTIFY_SERVICE
@@ -129,19 +154,33 @@ class ApplianceMonitorOptionsFlow(config_entries.OptionsFlow):
                     CONF_STARTING_POWER,
                     default=current.get(CONF_STARTING_POWER, DEFAULT_STARTING_POWER),
                 ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(min=1.0, max=500.0, step=1.0, unit_of_measurement="W")
+                    selector.NumberSelectorConfig(
+                        min=1.0, max=500.0, step=1.0, unit_of_measurement="W", mode=selector.NumberSelectorMode.BOX
+                    )
                 ),
                 vol.Optional(
                     CONF_FINISHING_POWER,
                     default=current.get(CONF_FINISHING_POWER, DEFAULT_FINISHING_POWER),
                 ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(min=0.5, max=50.0, step=0.5, unit_of_measurement="W")
+                    selector.NumberSelectorConfig(
+                        min=0.5, max=50.0, step=0.5, unit_of_measurement="W", mode=selector.NumberSelectorMode.BOX
+                    )
+                ),
+                vol.Optional(
+                    CONF_STARTING_DELAY,
+                    default=current.get(CONF_STARTING_DELAY, DEFAULT_STARTING_DELAY),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=5, max=600, step=5, unit_of_measurement="s", mode=selector.NumberSelectorMode.BOX
+                    )
                 ),
                 vol.Optional(
                     CONF_FINISHING_DELAY,
                     default=current.get(CONF_FINISHING_DELAY, DEFAULT_FINISHING_DELAY),
                 ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(min=30, max=1800, step=10, unit_of_measurement="s")
+                    selector.NumberSelectorConfig(
+                        min=30, max=1800, step=10, unit_of_measurement="s", mode=selector.NumberSelectorMode.BOX
+                    )
                 ),
                 vol.Optional(
                     CONF_NOTIFY_SERVICE,

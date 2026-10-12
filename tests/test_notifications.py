@@ -29,4 +29,6 @@ def test_notifications_formatting_finnish():
     actions = payload["data"]["actions"]
     assert len(actions) >= 2
     assert actions[0]["title"] == "✓ Eco 40-60"
+    assert actions[0]["action"] == "APPLIANCE_MONITOR_CONFIRM_entry_123_Eco 40-60"
     assert actions[-1]["title"] == "Sulje"
+    assert actions[-1]["action"] == "APPLIANCE_MONITOR_DISMISS_entry_123"

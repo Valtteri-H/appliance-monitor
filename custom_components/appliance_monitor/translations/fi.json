@@ -1,5 +1,9 @@
 {
   "config": {
+    "error": {
+      "invalid_power_thresholds": "Käynnistystehon on oltava suurempi kuin sammutustehon.",
+      "same_sensor": "Tehosensori ja energiasensori eivät voi olla sama entiteetti."
+    },
     "step": {
       "user": {
         "title": "Lisää laitevahti",
@@ -11,6 +15,7 @@
           "appliance_type": "Laitteen tyyppi",
           "starting_power": "Käynnistysteho (W)",
           "finishing_power": "Sammutusteho (W)",
+          "starting_delay": "Käynnistysviive (sekuntia)",
           "finishing_delay": "Valmistumisviive (sekuntia)",
           "notify_service": "Ilmoituspalvelu",
           "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset"
@@ -25,6 +30,7 @@
         "data": {
           "starting_power": "Käynnistysteho (W)",
           "finishing_power": "Sammutusteho (W)",
+          "starting_delay": "Käynnistysviive (sekuntia)",
           "finishing_delay": "Valmistumisviive (sekuntia)",
           "notify_service": "Ilmoituspalvelu",
           "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset"
@@ -35,10 +41,26 @@
   "entity": {
     "sensor": {
       "status": {
-        "name": "Tila"
+        "name": "Tila",
+        "state": {
+          "off": "Pois päältä",
+          "idle": "Valmiustila",
+          "running": "Käynnissä",
+          "paused": "Tauolla / Liotus",
+          "finished": "Valmis"
+        }
       },
       "phase": {
-        "name": "Vaihe"
+        "name": "Vaihe",
+        "state": {
+          "idle": "Valmiustila",
+          "weighing": "Punnitus",
+          "heating": "Lämmitys",
+          "rinsing": "Huuhtelu",
+          "spinning": "Linkous",
+          "drying": "Kuivaus",
+          "running": "Käynnissä"
+        }
       },
       "program": {
         "name": "Ohjelma"

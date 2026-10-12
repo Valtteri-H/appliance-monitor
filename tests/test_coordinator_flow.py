@@ -88,6 +88,8 @@ async def test_coordinator_full_cycle_and_learning():
     assert "Kirjopesu 40°C" not in coordinator.engine.profiles
 
     # Opitaan profiili uudestaan ja testataan palvelukutsu delete_program
+    # Nollataan confirmed_by_user jotta eri ohjelmanimi tallentuu uudeksi näytteeksi
+    snapshot.confirmed_by_user = False
     await coordinator.async_learn_cycle(snapshot, "PoistettavaOhjelma")
     assert "PoistettavaOhjelma" in coordinator.engine.profiles
 
@@ -97,6 +99,14 @@ async def test_coordinator_full_cycle_and_learning():
         {"entry_id": entry.entry_id, "program_name": "PoistettavaOhjelma"},
     )
     assert "PoistettavaOhjelma" not in coordinator.engine.profiles
+
+    # Testataan mobiili-ilmoituksen interaktiivinen vahvistus
+    hass.bus.async_fire(
+        "mobile_app_notification_action",
+        {"action": f"APPLIANCE_MONITOR_CONFIRM_{entry.entry_id}_Eco 40-60"},
+    )
+    await asyncio.sleep(0.01)
+    assert "Eco 40-60" in coordinator.engine.profiles
 
     # Siivous
     unload_success = await async_unload_entry(hass, entry)

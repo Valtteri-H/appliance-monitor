@@ -56,7 +56,7 @@ class Event:
 class HomeAssistant:
     def __init__(self):
         self.data = {}
-        self.states = {}
+        self.states = MockStates()
         self.bus = MockBus()
         self.config_entries = MockConfigEntries()
         self.services = MockServices()
@@ -65,13 +65,33 @@ class HomeAssistant:
         import asyncio
         return asyncio.create_task(coro)
 
+class MockStates:
+    def __init__(self):
+        self._states = {}
+
+    def get(self, entity_id: str):
+        return self._states.get(entity_id)
+
+    def set(self, entity_id: str, state: str):
+        class MockState:
+            def __init__(self, s):
+                self.state = s
+        self._states[entity_id] = MockState(state)
+
 
 class MockBus:
     def __init__(self):
         self.fired = []
+        self._listeners = {}
 
-    def async_fire(self, event_type: str, event_data: dict | None = None):
+    def async_listen(self, event_type: str, listener: Callable):
+        self._listeners.setdefault(event_type, []).append(listener)
+        return lambda: self._listeners[event_type].remove(listener)
+
+    def async_fire(self, event_type: str, event_data: dict[str, Any] | None = None):
         self.fired.append((event_type, event_data))
+        for listener in self._listeners.get(event_type, []):
+            listener(Event(event_type, event_data or {}))
 
 
 class MockConfigEntries:
@@ -95,6 +115,9 @@ class MockServices:
 
     def async_register(self, domain: str, service: str, handler: Any) -> None:
         self._services[(domain, service)] = handler
+
+    def async_remove(self, domain: str, service: str) -> None:
+        self._services.pop((domain, service), None)
 
     async def async_call(self, domain: str, service: str, service_data: dict | None = None):
         self.calls.append((domain, service, service_data))

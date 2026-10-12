@@ -1,5 +1,9 @@
 {
   "config": {
+    "error": {
+      "invalid_power_thresholds": "Starting threshold must be strictly greater than finishing threshold.",
+      "same_sensor": "Power sensor and energy sensor cannot be the same entity."
+    },
     "step": {
       "user": {
         "title": "Add Appliance Monitor",
@@ -11,6 +15,7 @@
           "appliance_type": "Appliance Type",
           "starting_power": "Starting Threshold (W)",
           "finishing_power": "Finishing Threshold (W)",
+          "starting_delay": "Starting Delay (seconds)",
           "finishing_delay": "Finishing Delay (seconds)",
           "notify_service": "Notification Service",
           "enable_actionable_notifications": "Enable Interactive Notifications"
@@ -25,6 +30,7 @@
         "data": {
           "starting_power": "Starting Threshold (W)",
           "finishing_power": "Finishing Threshold (W)",
+          "starting_delay": "Starting Delay (seconds)",
           "finishing_delay": "Finishing Delay (seconds)",
           "notify_service": "Notification Service",
           "enable_actionable_notifications": "Enable Interactive Notifications"
@@ -35,10 +41,26 @@
   "entity": {
     "sensor": {
       "status": {
-        "name": "Status"
+        "name": "Status",
+        "state": {
+          "off": "Off",
+          "idle": "Idle",
+          "running": "Running",
+          "paused": "Paused / Soaking",
+          "finished": "Finished"
+        }
       },
       "phase": {
-        "name": "Phase"
+        "name": "Phase",
+        "state": {
+          "idle": "Idle",
+          "weighing": "Weighing",
+          "heating": "Heating",
+          "rinsing": "Rinsing",
+          "spinning": "Spinning",
+          "drying": "Drying",
+          "running": "Running"
+        }
       },
       "program": {
         "name": "Program"

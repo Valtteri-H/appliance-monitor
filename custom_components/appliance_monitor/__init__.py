@@ -1,7 +1,9 @@
 """Appliance Monitor custom component setup."""
 from __future__ import annotations
 
+import asyncio
 import logging
+import math
 import time
 from typing import Any
 
@@ -13,6 +15,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    ACTION_CONFIRM_PROGRAM,
+    ACTION_DISMISS,
     CONF_ENABLE_ACTIONABLE_NOTIFICATIONS,
     CONF_ENERGY_SENSOR,
     CONF_FINISHING_DELAY,
@@ -88,32 +92,62 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register services once
     if not hass.services.has_service(DOMAIN, "delete_program"):
         async def handle_delete_program(call: Any) -> None:
-            program_name = call.data.get("program_name")
+            program_name = str(call.data.get("program_name", "")).strip()
             target_entry_id = call.data.get("entry_id")
-            for e_id, item in hass.data.get(DOMAIN, {}).items():
-                if target_entry_id and target_entry_id != e_id:
-                    continue
-                coord = item.get("coordinator")
-                if coord and program_name:
-                    coord.engine.delete_program(program_name)
-                    await coord.store.async_save(coord.engine.export_data())
-                    coord.async_update_listeners()
-                    _LOGGER.info("Deleted program %s from entry %s", program_name, e_id)
+            if not target_entry_id or not program_name:
+                _LOGGER.warning("Missing entry_id or program_name in delete_program")
+                return
+
+            item = hass.data.get(DOMAIN, {}).get(target_entry_id)
+            if not item:
+                _LOGGER.warning("Entry %s not found for delete_program", target_entry_id)
+                return
+
+            coord = item.get("coordinator")
+            if coord:
+                coord.engine.delete_program(program_name)
+                await coord.async_save_data()
+                coord.async_update_listeners()
+                _LOGGER.info("Deleted program %s from entry %s", program_name, target_entry_id)
 
         async def handle_clear_history(call: Any) -> None:
             target_entry_id = call.data.get("entry_id")
-            for e_id, item in hass.data.get(DOMAIN, {}).items():
-                if target_entry_id and target_entry_id != e_id:
-                    continue
-                coord = item.get("coordinator")
-                if coord:
-                    coord.engine.clear_all()
-                    await coord.store.async_save(coord.engine.export_data())
-                    coord.async_update_listeners()
-                    _LOGGER.info("Cleared all history for entry %s", e_id)
+            if not target_entry_id:
+                _LOGGER.warning("Missing entry_id in clear_history")
+                return
+
+            item = hass.data.get(DOMAIN, {}).get(target_entry_id)
+            if not item:
+                _LOGGER.warning("Entry %s not found for clear_history", target_entry_id)
+                return
+
+            coord = item.get("coordinator")
+            if coord:
+                coord.engine.clear_all()
+                await coord.async_save_data()
+                coord.async_update_listeners()
+                _LOGGER.info("Cleared all history for entry %s", target_entry_id)
 
         hass.services.async_register(DOMAIN, "delete_program", handle_delete_program)
         hass.services.async_register(DOMAIN, "clear_history", handle_clear_history)
+
+    # Listen to actionable notifications
+    @callback
+    def _async_handle_notification_action(event: Event) -> None:
+        action = event.data.get("action", "")
+        if action.startswith(f"{ACTION_CONFIRM_PROGRAM}_{entry.entry_id}_"):
+            prog_name = action.replace(f"{ACTION_CONFIRM_PROGRAM}_{entry.entry_id}_", "")
+            last_cycle = coordinator.sm.data.last_completed_cycle
+            if last_cycle:
+                hass.async_create_task(coordinator.async_learn_cycle(last_cycle, prog_name))
+                _LOGGER.info("Confirmed program '%s' via notification for %s", prog_name, entry.title)
+        elif action == f"{ACTION_DISMISS}_{entry.entry_id}":
+            coordinator.sm.reset_to_idle()
+            coordinator.async_update_listeners()
+
+    entry.async_on_unload(
+        hass.bus.async_listen("mobile_app_notification_action", _async_handle_notification_action)
+    )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
@@ -126,6 +160,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator_data = hass.data[DOMAIN].pop(entry.entry_id, None)
         if coordinator_data and "coordinator" in coordinator_data:
             await coordinator_data["coordinator"].async_unload()
+
+        # Remove global services when last entry is unloaded
+        if not hass.data.get(DOMAIN):
+            hass.services.async_remove(DOMAIN, "delete_program")
+            hass.services.async_remove(DOMAIN, "clear_history")
 
     return unload_ok
 
@@ -161,6 +200,7 @@ class ApplianceCoordinator(DataUpdateCoordinator):
         self.energy_entity = energy_entity
         self.notify_service = notify_service
         self.enable_notifications = enable_notifications
+        self._save_lock = asyncio.Lock()
 
         self.sm = ApplianceStateMachine(
             profile_engine=engine,
@@ -190,27 +230,41 @@ class ApplianceCoordinator(DataUpdateCoordinator):
         for unsub in self._unsub_trackers:
             unsub()
         self._unsub_trackers.clear()
-        await self.store.async_save(self.engine.export_data())
+        await self.async_save_data()
+
+    async def async_save_data(self) -> None:
+        """Save engine state with concurrency protection."""
+        async with self._save_lock:
+            await self.store.async_save(self.engine.export_data())
 
     @callback
     def _async_handle_state_event(self, event: Event) -> None:
         """Handle incoming state changes from HA power and energy sensors."""
-        now = time.time()
+        now = time.monotonic()
+
+        def _safe_float(val: Any) -> float | None:
+            try:
+                f = float(val)
+                if math.isfinite(f) and f >= 0.0:
+                    return f
+            except (ValueError, TypeError):
+                pass
+            return None
 
         power_state = self.hass.states.get(self.power_entity)
-        try:
-            power_val = float(power_state.state) if power_state and power_state.state not in ("unavailable", "unknown") else 0.0
-        except (ValueError, TypeError):
-            power_val = 0.0
+        if not power_state or power_state.state in ("unavailable", "unknown"):
+            # Do not treat transient sensor unavailability as zero power drop
+            return
+
+        power_val = _safe_float(power_state.state)
+        if power_val is None:
+            return
 
         energy_val = None
         if self.energy_entity:
             energy_state = self.hass.states.get(self.energy_entity)
-            try:
-                if energy_state and energy_state.state not in ("unavailable", "unknown"):
-                    energy_val = float(energy_state.state)
-            except (ValueError, TypeError):
-                energy_val = None
+            if energy_state and energy_state.state not in ("unavailable", "unknown"):
+                energy_val = _safe_float(energy_state.state)
 
         self.sm.update_power(power_val, now, energy_kwh=energy_val)
         self.async_update_listeners()
@@ -252,17 +306,24 @@ class ApplianceCoordinator(DataUpdateCoordinator):
         service_parts = self.notify_service.split(".", 1)
         if len(service_parts) == 2:
             domain, service = service_parts
-            await self.hass.services.async_call(domain, service, payload)
+            try:
+                await self.hass.services.async_call(domain, service, payload)
+            except (OSError, RuntimeError, ValueError) as err:
+                _LOGGER.warning(
+                    "Failed to send notification via %s: %s", self.notify_service, err
+                )
 
     async def async_learn_cycle(self, snapshot: CycleSnapshot, program_name: str) -> None:
         """Teach engine and persist to storage."""
+        if snapshot.confirmed_by_user and snapshot.program_name == program_name:
+            return  # Prevent duplicate learning of identical sample
         self.engine.learn_cycle(snapshot, program_name)
-        await self.store.async_save(self.engine.export_data())
+        await self.async_save_data()
         self.async_update_listeners()
 
     async def async_forget_last_cycle(self) -> CycleSnapshot | None:
         """Delete last learned cycle and persist."""
         removed = self.engine.forget_last_cycle()
-        await self.store.async_save(self.engine.export_data())
+        await self.async_save_data()
         self.async_update_listeners()
         return removed

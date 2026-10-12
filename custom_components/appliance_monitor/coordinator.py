@@ -81,9 +81,10 @@ class ApplianceStateMachine:
         self, power_w: float, current_time: float, energy_kwh: float | None = None
     ) -> None:
         """Process incoming power and energy readings."""
+        power_w = max(0.0, power_w)
         self.data.current_power_w = power_w
         if energy_kwh is not None:
-            self.data.current_energy_kwh = energy_kwh
+            self.data.current_energy_kwh = max(0.0, energy_kwh)
 
         dt = 0.0
         if self._last_update_time is not None:
@@ -231,3 +232,5 @@ class ApplianceStateMachine:
         self.data.estimated_remaining_seconds = None
         self._above_threshold_since = None
         self._below_threshold_since = None
+        if self._current_snapshot:
+            self._current_snapshot = None

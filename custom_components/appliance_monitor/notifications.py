@@ -57,7 +57,7 @@ def build_actionable_notification_payload(
     if snapshot.program_name:
         actions.append(
             {
-                "action": f"{ACTION_CONFIRM_PROGRAM}_{snapshot.program_name}",
+                "action": f"{ACTION_CONFIRM_PROGRAM}_{entry_id}_{snapshot.program_name}",
                 "title": f"✓ {snapshot.program_name}",
             }
         )
@@ -67,14 +67,14 @@ def build_actionable_notification_payload(
         if prog != snapshot.program_name and len(actions) < 3:
             actions.append(
                 {
-                    "action": f"{ACTION_CONFIRM_PROGRAM}_{prog}",
+                    "action": f"{ACTION_CONFIRM_PROGRAM}_{entry_id}_{prog}",
                     "title": prog,
                 }
             )
 
     actions.append(
         {
-            "action": ACTION_DISMISS,
+            "action": f"{ACTION_DISMISS}_{entry_id}",
             "title": "Sulje" if lang == "fi" else "Dismiss",
         }
     )

@@ -78,6 +78,9 @@ class ProgramProfile:
         return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
 
 
+MAX_HISTORY_CYCLES = 100
+
+
 class ProfileEngine:
     """Engine for tracking live signatures, matching against learned profiles and learning."""
 
@@ -192,6 +195,10 @@ class ProfileEngine:
         snapshot.program_name = program_name
         snapshot.confirmed_by_user = True
         self.history.append(snapshot)
+
+        # Enforce history limit to avoid unbounded memory / storage growth
+        if len(self.history) > MAX_HISTORY_CYCLES:
+            self.history = self.history[-MAX_HISTORY_CYCLES:]
 
         if program_name not in self.profiles:
             self.profiles[program_name] = ProgramProfile(name=program_name)
