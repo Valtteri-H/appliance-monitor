@@ -1,0 +1,85 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Appliance Monitor",
+        "description": "Configure power monitoring and cycle detection for your appliance.",
+        "data": {
+          "name": "Appliance Name",
+          "power_sensor": "Power Sensor (W)",
+          "energy_sensor": "Energy Sensor (kWh, optional)",
+          "appliance_type": "Appliance Type",
+          "starting_power": "Starting Threshold (W)",
+          "finishing_power": "Finishing Threshold (W)",
+          "finishing_delay": "Finishing Delay (seconds)",
+          "notify_service": "Notification Service",
+          "enable_actionable_notifications": "Enable Interactive Notifications"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Appliance Monitor",
+        "data": {
+          "starting_power": "Starting Threshold (W)",
+          "finishing_power": "Finishing Threshold (W)",
+          "finishing_delay": "Finishing Delay (seconds)",
+          "notify_service": "Notification Service",
+          "enable_actionable_notifications": "Enable Interactive Notifications"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "phase": {
+        "name": "Phase"
+      },
+      "program": {
+        "name": "Program"
+      },
+      "remaining_time": {
+        "name": "Estimated remaining"
+      },
+      "cycle_duration": {
+        "name": "Cycle duration"
+      },
+      "cycle_energy": {
+        "name": "Cycle energy"
+      }
+    },
+    "binary_sensor": {
+      "running": {
+        "name": "Running"
+      }
+    },
+    "select": {
+      "program_select": {
+        "name": "Confirm program"
+      }
+    },
+    "button": {
+      "reset": {
+        "name": "Reset to idle"
+      },
+      "forget_last": {
+        "name": "Forget last cycle"
+      }
+    }
+  },
+  "selector": {
+    "appliance_type": {
+      "options": {
+        "washing_machine": "Washing machine",
+        "dishwasher": "Dishwasher",
+        "dryer": "Dryer",
+        "custom": "Custom appliance"
+      }
+    }
+  }
+}

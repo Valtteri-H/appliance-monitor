@@ -1,0 +1,106 @@
+"""Minimal mocks of Home Assistant classes for fast standalone testing."""
+from collections.abc import Callable
+from enum import StrEnum
+from typing import Any
+
+
+class Platform(StrEnum):
+    SENSOR = "sensor"
+    BINARY_SENSOR = "binary_sensor"
+    SELECT = "select"
+    BUTTON = "button"
+
+
+EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
+
+
+class UnitOfTime(StrEnum):
+    MINUTES = "min"
+    SECONDS = "s"
+
+
+class UnitOfPower(StrEnum):
+    WATT = "W"
+
+
+class UnitOfEnergy(StrEnum):
+    KILO_WATT_HOUR = "kWh"
+
+
+class ConfigEntry:
+    def __init__(self, entry_id: str = "test_entry", title: str = "Test", data: dict | None = None, options: dict | None = None):
+        self.entry_id = entry_id
+        self.title = title
+        self.data = data or {}
+        self.options = options or {}
+        self._update_listeners = []
+
+    def add_update_listener(self, listener: Callable):
+        self._update_listeners.append(listener)
+        return lambda: self._update_listeners.remove(listener)
+
+    def async_on_unload(self, callback: Callable):
+        pass
+
+
+def callback(func: Callable) -> Callable:
+    return func
+
+
+class Event:
+    def __init__(self, event_type: str, data: dict | None = None):
+        self.event_type = event_type
+        self.data = data or {}
+
+
+class HomeAssistant:
+    def __init__(self):
+        self.data = {}
+        self.states = {}
+        self.bus = MockBus()
+        self.config_entries = MockConfigEntries()
+        self.services = MockServices()
+
+    def async_create_task(self, coro):
+        import asyncio
+        return asyncio.create_task(coro)
+
+
+class MockBus:
+    def __init__(self):
+        self.fired = []
+
+    def async_fire(self, event_type: str, event_data: dict | None = None):
+        self.fired.append((event_type, event_data))
+
+
+class MockConfigEntries:
+    async def async_forward_entry_setups(self, entry, platforms):
+        return True
+
+    async def async_unload_platforms(self, entry, platforms):
+        return True
+
+    async def async_reload(self, entry_id):
+        return True
+
+
+class MockServices:
+    def __init__(self):
+        self.calls = []
+        self._services = {}
+
+    def has_service(self, domain: str, service: str) -> bool:
+        return (domain, service) in self._services
+
+    def async_register(self, domain: str, service: str, handler: Any) -> None:
+        self._services[(domain, service)] = handler
+
+    async def async_call(self, domain: str, service: str, service_data: dict | None = None):
+        self.calls.append((domain, service, service_data))
+        handler = self._services.get((domain, service))
+        if handler:
+            class MockCall:
+                def __init__(self, data):
+                    self.data = data
+            await handler(MockCall(service_data or {}))

@@ -1,0 +1,85 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lisää laitevahti",
+        "description": "Määritä kodinkoneen tehonvalvonta ja automaattinen tilatunnistus.",
+        "data": {
+          "name": "Laitteen nimi",
+          "power_sensor": "Tehosensori (W)",
+          "energy_sensor": "Energiasensori (kWh, valinnainen)",
+          "appliance_type": "Laitteen tyyppi",
+          "starting_power": "Käynnistysteho (W)",
+          "finishing_power": "Sammutusteho (W)",
+          "finishing_delay": "Valmistumisviive (sekuntia)",
+          "notify_service": "Ilmoituspalvelu",
+          "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Muokkaa laitevahtia",
+        "data": {
+          "starting_power": "Käynnistysteho (W)",
+          "finishing_power": "Sammutusteho (W)",
+          "finishing_delay": "Valmistumisviive (sekuntia)",
+          "notify_service": "Ilmoituspalvelu",
+          "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Tila"
+      },
+      "phase": {
+        "name": "Vaihe"
+      },
+      "program": {
+        "name": "Ohjelma"
+      },
+      "remaining_time": {
+        "name": "Arvioitu jäljellä"
+      },
+      "cycle_duration": {
+        "name": "Syklin kesto"
+      },
+      "cycle_energy": {
+        "name": "Syklin energiankulutus"
+      }
+    },
+    "binary_sensor": {
+      "running": {
+        "name": "Käynnissä"
+      }
+    },
+    "select": {
+      "program_select": {
+        "name": "Vahvista ohjelma"
+      }
+    },
+    "button": {
+      "reset": {
+        "name": "Kuittaa valmiustilaan"
+      },
+      "forget_last": {
+        "name": "Unohda viimeisin sykli"
+      }
+    }
+  },
+  "selector": {
+    "appliance_type": {
+      "options": {
+        "washing_machine": "Pyykinpesukone",
+        "dishwasher": "Astianpesukone",
+        "dryer": "Kuivausrumpu",
+        "custom": "Mukautettu laite"
+      }
+    }
+  }
+}

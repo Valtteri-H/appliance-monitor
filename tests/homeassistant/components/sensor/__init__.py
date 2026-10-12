@@ -1,0 +1,14 @@
+from enum import StrEnum
+
+
+class SensorDeviceClass(StrEnum):
+    DURATION = "duration"
+    ENERGY = "energy"
+    POWER = "power"
+
+class SensorStateClass(StrEnum):
+    MEASUREMENT = "measurement"
+    TOTAL_INCREASING = "total_increasing"
+
+class SensorEntity:
+    pass
