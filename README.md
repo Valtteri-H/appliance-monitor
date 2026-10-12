@@ -7,6 +7,8 @@ Home Assistant -integraatio kodinkoneiden (pyykinpesukone, astianpesukone, kuiva
 
 Integraatio tunnistaa ohjelman vaiheet (lämmitys, linkous, liotus, valmis), suodattaa tehonvaihtelut ja arvioi käytetyn ohjelman sekä jäljellä olevan ajan tehodatan pohjalta.
 
+> **Huomautus:** Tämä projekti on 100 % vibekoodattu.
+
 ---
 
 ## Ominaisuudet
@@ -64,6 +66,8 @@ Integraatio tunnistaa ohjelman vaiheet (lämmitys, linkous, liotus, valmis), suo
 Home Assistant integration for monitoring washing machines, dishwashers, and dryers using power measurements (W).
 
 The integration detects cycle phases (heating, spinning, soaking, finished), filters power fluctuations, and estimates the active program and remaining time based on power signature data.
+
+> **Note:** This project is 100% vibe-coded.
 
 ---
 
