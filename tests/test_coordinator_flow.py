@@ -108,6 +108,14 @@ async def test_coordinator_full_cycle_and_learning():
     await asyncio.sleep(0.01)
     assert "Eco 40-60" in coordinator.engine.profiles
 
+    # Testataan mukautetun nimen syöttö text-entiteetillä
+    from custom_components.appliance_monitor.text import ApplianceProgramText
+
+    text_entity = ApplianceProgramText(coordinator, entry)
+    snapshot.confirmed_by_user = False
+    await text_entity.async_set_value("Puuvilla 90°C")
+    assert "Puuvilla 90°C" in coordinator.engine.profiles
+
     # Siivous
     unload_success = await async_unload_entry(hass, entry)
     assert unload_success is True

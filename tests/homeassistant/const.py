@@ -6,6 +6,7 @@ class Platform(StrEnum):
     BINARY_SENSOR = "binary_sensor"
     SELECT = "select"
     BUTTON = "button"
+    TEXT = "text"
 
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 

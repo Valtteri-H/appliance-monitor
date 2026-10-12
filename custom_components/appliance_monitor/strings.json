@@ -85,6 +85,11 @@
         "name": "Confirm program"
       }
     },
+    "text": {
+      "program_text": {
+        "name": "New program name"
+      }
+    },
     "button": {
       "reset": {
         "name": "Reset to idle"

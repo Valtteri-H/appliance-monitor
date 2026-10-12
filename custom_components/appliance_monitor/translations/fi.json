@@ -85,6 +85,11 @@
         "name": "Vahvista ohjelma"
       }
     },
+    "text": {
+      "program_text": {
+        "name": "Uuden ohjelman nimi"
+      }
+    },
     "button": {
       "reset": {
         "name": "Kuittaa valmiustilaan"

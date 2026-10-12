@@ -42,6 +42,7 @@ Integraatio tunnistaa ohjelman vaiheet (lämmitys, linkous, liotus, valmis), suo
 | `sensor.<laite>_cycle_energy` | Sensori (energy) | Syklin kulutus (kWh) |
 | `binary_sensor.<laite>_running` | Binäärisensori | Käynnissäolotila (`on` kun aktiivinen tai tauolla) |
 | `select.<laite>_program_select` | Valitsin | Ohjelman vahvistus ja opetus |
+| `text.<laite>_program_text` | Teksti | Uuden ohjelman nimen syöttö ja opetus |
 | `button.<laite>_reset` | Painike | Kuittaa valmiustilaan |
 | `button.<laite>_forget_last` | Painike | Poistaa edellisen syklin tiedot profiilista |
 
@@ -99,6 +100,7 @@ The integration detects cycle phases (heating, spinning, soaking, finished), fil
 | `sensor.<appliance>_cycle_energy` | Sensor (energy) | Cycle energy consumption (kWh) |
 | `binary_sensor.<appliance>_running` | Binary sensor | Activity state (`on` when running or paused) |
 | `select.<appliance>_program_select` | Select | Program verification and learning selector |
+| `text.<appliance>_program_text` | Text | Custom program name input and learning |
 | `button.<appliance>_reset` | Button | Reset state to idle |
 | `button.<appliance>_forget_last` | Button | Delete last cycle sample from profile |
 
