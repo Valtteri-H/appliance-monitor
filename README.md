@@ -26,7 +26,7 @@ Integraatio tunnistaa ohjelman vaiheet (lämmitys, linkous, liotus, valmis), suo
 - **Käyttöliittymäkonfigurointi (Config Flow):**
   - Lisäys ja muokkaus suoraan Home Assistantin käyttöliittymästä ilman YAML-määrityksiä.
   - Tukee tehosensoreita eri integraatioista (ZHA, Zigbee2MQTT, Shelly, Tuya jne.).
-  - Käännökset: suomi ja englanti.
+  - Täysi monikielituki (suomi ja englanti).
 
 ---
 
@@ -62,9 +62,53 @@ Integraatio tunnistaa ohjelman vaiheet (lämmitys, linkous, liotus, valmis), suo
 
 Home Assistant integration for monitoring washing machines, dishwashers, and dryers using power measurements (W).
 
-### Features
-- State machine handling wash pauses, soaking intervals, and cycle completions.
-- Signature profiling distinguishing heating cycles, spin patterns, and energy metrics.
-- Actionable notification support for user program confirmation.
-- Built-in correction button and services to manage learned cycle profiles.
-- Config Flow and Options Flow UI configuration (English and Finnish).
+The integration detects cycle phases (heating, spinning, soaking, finished), filters power fluctuations, and estimates the active program and remaining time based on power signature data.
+
+---
+
+## Features
+
+- **State Machine:**
+  - Separates soaking pauses from cycle completion using a configurable delay.
+  - Filters out transient power spikes.
+- **Power Signature Engine:**
+  - Identifies target temperatures based on heating phase energy and duration (e.g. 30 °C, 40 °C, 60 °C, 90 °C).
+  - Detects spinning stages and motor load.
+  - Predicts active program and remaining time from learned profiles.
+- **Actionable Notifications:**
+  - Sends a completion notification (duration, kWh) with action buttons to confirm the program.
+- **Correction and Profile Management:**
+  - Button entity to remove the previous cycle from learned profiles (`button.<appliance>_forget_last`).
+  - Services to delete entire program profiles (`appliance_monitor.delete_program`) or clear history (`appliance_monitor.clear_history`).
+- **UI Configuration (Config Flow):**
+  - Set up and configure via Home Assistant UI without YAML editing.
+  - Compatible with power sensors from any integration (ZHA, Zigbee2MQTT, Shelly, Tuya, etc.).
+  - Full localization support for Finnish and English.
+
+---
+
+## Entities
+
+| Entity | Type | Description |
+| :--- | :--- | :--- |
+| `sensor.<appliance>_status` | Sensor (enum) | Appliance state (`off`, `idle`, `running`, `paused`, `finished`) |
+| `sensor.<appliance>_phase` | Sensor (enum) | Cycle phase (`weighing`, `heating`, `rinsing`, `spinning`, `drying`) |
+| `sensor.<appliance>_program` | Sensor | Predicted program and confidence |
+| `sensor.<appliance>_remaining_time` | Sensor (duration) | Estimated remaining duration (min) |
+| `sensor.<appliance>_cycle_duration` | Sensor (duration) | Cycle duration (min) |
+| `sensor.<appliance>_cycle_energy` | Sensor (energy) | Cycle energy consumption (kWh) |
+| `binary_sensor.<appliance>_running` | Binary sensor | Activity state (`on` when running or paused) |
+| `select.<appliance>_program_select` | Select | Program verification and learning selector |
+| `button.<appliance>_reset` | Button | Reset state to idle |
+| `button.<appliance>_forget_last` | Button | Delete last cycle sample from profile |
+
+---
+
+## Installation
+
+### HACS
+1. Open Home Assistant and navigate to **HACS** -> **Integrations**.
+2. Select **Custom repositories** from the menu.
+3. Add `https://github.com/Valtteri-H/appliance-monitor` with category **Integration**.
+4. Download the integration and restart Home Assistant.
+5. Go to **Settings** -> **Devices & Services** -> **Add Integration** and search for **Appliance Monitor**.
