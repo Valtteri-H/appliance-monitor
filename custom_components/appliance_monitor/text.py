@@ -51,7 +51,7 @@ class ApplianceProgramText(ApplianceBaseEntity, TextEntity):
             return
 
         self._attr_native_value = clean_name
-        last_cycle = self.coordinator.sm.data.last_completed_cycle
+        last_cycle = self.coordinator.sm.get_or_finalize_cycle_for_learning()
         if last_cycle:
             await self.coordinator.async_learn_cycle(last_cycle, clean_name)
             _LOGGER.info(

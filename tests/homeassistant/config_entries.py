@@ -24,6 +24,14 @@ class ConfigFlow:
 
 
 class OptionsFlow:
+    _config_entry: ConfigEntry | None = None
+
+    @property
+    def config_entry(self) -> ConfigEntry:
+        if self._config_entry is None:
+            raise AttributeError("config_entry not initialized")
+        return self._config_entry
+
     def async_create_entry(self, title: str, data: dict):
         return {"type": "create_entry", "title": title, "data": data}
 
