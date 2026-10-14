@@ -2,7 +2,8 @@
   "config": {
     "error": {
       "invalid_power_thresholds": "Starting threshold must be strictly greater than finishing threshold.",
-      "same_sensor": "Power sensor and energy sensor cannot be the same entity."
+      "same_sensor": "Power sensor and energy sensor cannot be the same entity.",
+      "invalid_quiet_hours": "Quiet hours must be provided in valid HH:MM format for both start and end."
     },
     "step": {
       "user": {
@@ -18,12 +19,19 @@
           "starting_delay": "Starting Delay (seconds)",
           "finishing_delay": "Finishing Delay (seconds)",
           "notify_service": "Notification Service",
-          "enable_actionable_notifications": "Enable Interactive Notifications"
+          "enable_actionable_notifications": "Enable Interactive Notifications",
+          "quiet_hours_start": "Quiet Hours Start (HH:MM, optional)",
+          "quiet_hours_end": "Quiet Hours End (HH:MM, optional)",
+          "reminder_interval": "Reminder Interval (minutes, 0 = disabled)"
         }
       }
     }
   },
   "options": {
+    "error": {
+      "invalid_power_thresholds": "Starting threshold must be strictly greater than finishing threshold.",
+      "invalid_quiet_hours": "Quiet hours must be provided in valid HH:MM format for both start and end."
+    },
     "step": {
       "init": {
         "title": "Configure Appliance Monitor",
@@ -33,7 +41,10 @@
           "starting_delay": "Starting Delay (seconds)",
           "finishing_delay": "Finishing Delay (seconds)",
           "notify_service": "Notification Service",
-          "enable_actionable_notifications": "Enable Interactive Notifications"
+          "enable_actionable_notifications": "Enable Interactive Notifications",
+          "quiet_hours_start": "Quiet Hours Start (HH:MM, optional)",
+          "quiet_hours_end": "Quiet Hours End (HH:MM, optional)",
+          "reminder_interval": "Reminder Interval (minutes, 0 = disabled)"
         }
       }
     }
@@ -106,6 +117,32 @@
         "dishwasher": "Dishwasher",
         "dryer": "Dryer",
         "custom": "Custom appliance"
+      }
+    }
+  },
+  "services": {
+    "delete_program": {
+      "name": "Delete learned program",
+      "description": "Deletes a learned program profile and removes its sample history.",
+      "fields": {
+        "entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Appliance Monitor instance."
+        },
+        "program_name": {
+          "name": "Program Name",
+          "description": "Exact name of the learned program to delete."
+        }
+      }
+    },
+    "clear_history": {
+      "name": "Clear all learned history",
+      "description": "Wipes all learned program profiles and cycle history for the appliance.",
+      "fields": {
+        "entry_id": {
+          "name": "Config Entry ID",
+          "description": "The config entry ID of the Appliance Monitor instance."
+        }
       }
     }
   }

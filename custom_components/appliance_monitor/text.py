@@ -7,11 +7,11 @@ from typing import Any
 from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .entity import ApplianceBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,24 +26,17 @@ async def async_setup_entry(
     async_add_entities([ApplianceProgramText(coordinator, entry)])
 
 
-class ApplianceProgramText(CoordinatorEntity, TextEntity):
+class ApplianceProgramText(ApplianceBaseEntity, TextEntity):
     """Text entity allowing user to enter and learn custom program names."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "program_text"
     _attr_mode = TextMode.TEXT
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: Any, entry: ConfigEntry) -> None:
         """Initialize text entity."""
-        super().__init__(coordinator)
-        self.entry = entry
+        super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_program_text"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
-            manufacturer="Appliance Monitor",
-            model="Smart Appliance Watcher",
-        )
         self._attr_native_value = ""
 
     @property
@@ -67,12 +60,9 @@ class ApplianceProgramText(CoordinatorEntity, TextEntity):
                 self.entry.title,
             )
         else:
-            # If no completed cycle yet, still register profile so it appears in select options
-            if clean_name not in self.coordinator.engine.profiles:
-                from .profile_engine import ProgramProfile
-
-                self.coordinator.engine.profiles[clean_name] = ProgramProfile(name=clean_name)
+            if self.coordinator.engine.register_program(clean_name):
                 await self.coordinator.async_save_data()
+                self.coordinator.async_update_listeners()
                 _LOGGER.info(
                     "User registered new program profile '%s' for %s",
                     clean_name,
