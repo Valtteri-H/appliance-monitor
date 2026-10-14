@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Callable
 from typing import Any
 
@@ -13,18 +15,21 @@ class Event:
 class HomeAssistant:
     def __init__(self):
         self.data = {}
-        self.states = MockStates()
         self.bus = MockBus()
+        self.states = MockStates(self.bus)
         self.config_entries = MockConfigEntries()
         self.services = MockServices()
+        self.config = type("MockConfig", (), {"language": "fi"})()
+        self._scheduled_callbacks = []
 
     def async_create_task(self, coro):
         import asyncio
         return asyncio.create_task(coro)
 
 class MockStates:
-    def __init__(self):
+    def __init__(self, bus: MockBus | None = None):
         self._states = {}
+        self._bus = bus
 
     def get(self, entity_id: str):
         return self._states.get(entity_id)
@@ -34,6 +39,11 @@ class MockStates:
             def __init__(self, s):
                 self.state = s
         self._states[entity_id] = MockState(state)
+        if self._bus is not None:
+            self._bus.async_fire(
+                "state_changed",
+                {"entity_id": entity_id, "new_state": self._states[entity_id]},
+            )
 
 class MockBus:
     def __init__(self):
@@ -46,7 +56,7 @@ class MockBus:
 
     def async_fire(self, event_type: str, event_data: dict[str, Any] | None = None):
         self.fired.append((event_type, event_data))
-        for listener in self._listeners.get(event_type, []):
+        for listener in list(self._listeners.get(event_type, [])):
             listener(Event(event_type, event_data or {}))
 
 class MockConfigEntries:
@@ -82,4 +92,12 @@ class MockServices:
                     self.data = data
             await handler(MockCall(service_data or {}))
 
-__all__ = ["Event", "HomeAssistant", "callback"]
+__all__ = [
+    "Event",
+    "HomeAssistant",
+    "MockBus",
+    "MockConfigEntries",
+    "MockServices",
+    "MockStates",
+    "callback",
+]
