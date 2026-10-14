@@ -15,6 +15,9 @@ CONF_FINISHING_DELAY = "finishing_delay"
 CONF_APPLIANCE_TYPE = "appliance_type"
 CONF_NOTIFY_SERVICE = "notify_service"
 CONF_ENABLE_ACTIONABLE_NOTIFICATIONS = "enable_actionable_notifications"
+CONF_QUIET_HOURS_START = "quiet_hours_start"
+CONF_QUIET_HOURS_END = "quiet_hours_end"
+CONF_REMINDER_INTERVAL = "reminder_interval"
 
 # Appliance types
 TYPE_WASHING_MACHINE = "washing_machine"
@@ -28,6 +31,11 @@ DEFAULT_FINISHING_POWER = 3.0   # W
 DEFAULT_STARTING_DELAY = 60     # seconds
 DEFAULT_FINISHING_DELAY = 300   # 5 minutes
 DEFAULT_NOTIFY_SERVICE = "notify.notify"
+DEFAULT_REMINDER_INTERVAL = 0
+
+EMA_ALPHA = 0.2
+MAX_DT_SECONDS = 60.0
+DRYER_HEATING_THRESHOLD = 350.0
 
 # Cycle states
 STATE_OFF = "off"
@@ -48,8 +56,6 @@ PHASE_UNKNOWN = "running"
 # Events
 EVENT_CYCLE_STARTED = "appliance_monitor_started"
 EVENT_CYCLE_FINISHED = "appliance_monitor_finished"
-EVENT_PROGRAM_PREDICTED = "appliance_monitor_program_predicted"
-EVENT_PROGRAM_CONFIRMED = "appliance_monitor_program_confirmed"
 
 # Actions for interactive notifications
 ACTION_CONFIRM_PROGRAM = "APPLIANCE_MONITOR_CONFIRM"

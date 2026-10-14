@@ -11,9 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
@@ -30,6 +28,7 @@ from .const import (
     STATE_PAUSED,
     STATE_RUNNING,
 )
+from .entity import ApplianceBaseEntity
 
 
 async def async_setup_entry(
@@ -50,23 +49,6 @@ async def async_setup_entry(
             ApplianceEnergySensor(coordinator, entry),
         ]
     )
-
-
-class ApplianceBaseEntity(CoordinatorEntity):
-    """Base entity for Appliance Monitor."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, coordinator: Any, entry: ConfigEntry) -> None:
-        """Initialize the base entity."""
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
-            manufacturer="Appliance Monitor",
-            model="Smart Appliance Watcher",
-        )
 
 
 class ApplianceStatusSensor(ApplianceBaseEntity, SensorEntity):

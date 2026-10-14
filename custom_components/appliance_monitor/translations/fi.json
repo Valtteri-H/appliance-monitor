@@ -2,7 +2,8 @@
   "config": {
     "error": {
       "invalid_power_thresholds": "Käynnistystehon on oltava suurempi kuin sammutustehon.",
-      "same_sensor": "Tehosensori ja energiasensori eivät voi olla sama entiteetti."
+      "same_sensor": "Tehosensori ja energiasensori eivät voi olla sama entiteetti.",
+      "invalid_quiet_hours": "Hiljaiset tunnit on annettava muodossa HH:MM sekä alku- että loppuajalle."
     },
     "step": {
       "user": {
@@ -18,12 +19,19 @@
           "starting_delay": "Käynnistysviive (sekuntia)",
           "finishing_delay": "Valmistumisviive (sekuntia)",
           "notify_service": "Ilmoituspalvelu",
-          "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset"
+          "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset",
+          "quiet_hours_start": "Hiljaisten tuntien alku (HH:MM, valinnainen)",
+          "quiet_hours_end": "Hiljaisten tuntien loppu (HH:MM, valinnainen)",
+          "reminder_interval": "Muistutusväli (minuuttia, 0 = ei käytössä)"
         }
       }
     }
   },
   "options": {
+    "error": {
+      "invalid_power_thresholds": "Käynnistystehon on oltava suurempi kuin sammutustehon.",
+      "invalid_quiet_hours": "Hiljaiset tunnit on annettava muodossa HH:MM sekä alku- että loppuajalle."
+    },
     "step": {
       "init": {
         "title": "Muokkaa laitevahtia",
@@ -33,7 +41,10 @@
           "starting_delay": "Käynnistysviive (sekuntia)",
           "finishing_delay": "Valmistumisviive (sekuntia)",
           "notify_service": "Ilmoituspalvelu",
-          "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset"
+          "enable_actionable_notifications": "Ota käyttöön interaktiiviset mobiili-ilmoitukset",
+          "quiet_hours_start": "Hiljaisten tuntien alku (HH:MM, valinnainen)",
+          "quiet_hours_end": "Hiljaisten tuntien loppu (HH:MM, valinnainen)",
+          "reminder_interval": "Muistutusväli (minuuttia, 0 = ei käytössä)"
         }
       }
     }
@@ -106,6 +117,32 @@
         "dishwasher": "Astianpesukone",
         "dryer": "Kuivausrumpu",
         "custom": "Mukautettu laite"
+      }
+    }
+  },
+  "services": {
+    "delete_program": {
+      "name": "Poista opittu ohjelma",
+      "description": "Poistaa opitun ohjelmaprofiilin ja sen syklihistorian.",
+      "fields": {
+        "entry_id": {
+          "name": "Integraation tunniste (Config Entry ID)",
+          "description": "Appliance Monitor -laitteen config entry -tunniste."
+        },
+        "program_name": {
+          "name": "Ohjelman nimi",
+          "description": "Poistettavan ohjelman tarkka nimi."
+        }
+      }
+    },
+    "clear_history": {
+      "name": "Tyhjennä oppimishistoria",
+      "description": "Nollaa laitteen kaikki opitut ohjelmaprofiilit ja syklihistorian.",
+      "fields": {
+        "entry_id": {
+          "name": "Integraation tunniste (Config Entry ID)",
+          "description": "Appliance Monitor -laitteen config entry -tunniste."
+        }
       }
     }
   }

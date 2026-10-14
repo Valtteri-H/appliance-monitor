@@ -1,10 +1,13 @@
 [project]
 name = "appliance-monitor"
-version = "0.1.0"
+version = "1.1.0"
 description = "Home Assistant custom component for smart appliance cycle monitoring and adaptive learning"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
+dependencies = []
+
+[dependency-groups]
+dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "ruff>=0.3.0",
