@@ -9,6 +9,9 @@ from custom_components.appliance_monitor.const import (
     CONF_FINISHING_POWER,
     CONF_NOTIFY_SERVICE,
     CONF_POWER_SENSOR,
+    CONF_QUIET_HOURS_END,
+    CONF_QUIET_HOURS_START,
+    CONF_REMINDER_INTERVAL,
     CONF_STARTING_DELAY,
     CONF_STARTING_POWER,
     DOMAIN,
@@ -117,5 +120,85 @@ async def test_coordinator_full_cycle_and_learning():
     assert "Puuvilla 90°C" in coordinator.engine.profiles
 
     # Siivous
+    unload_success = await async_unload_entry(hass, entry)
+    assert unload_success is True
+
+
+@pytest.mark.asyncio
+async def test_live_state_events_timers_and_recovery():
+    hass = HomeAssistant()
+    entry = ConfigEntry(
+        entry_id="test_live_coordinator",
+        title="Pyykinpesukone",
+        data={
+            CONF_POWER_SENSOR: "sensor.test_power",
+            CONF_STARTING_POWER: 10.0,
+            CONF_FINISHING_POWER: 3.0,
+            CONF_STARTING_DELAY: 5.0,
+            CONF_FINISHING_DELAY: 10.0,
+            CONF_NOTIFY_SERVICE: "notify.mobile_app_test",
+            CONF_ENABLE_ACTIONABLE_NOTIFICATIONS: True,
+        },
+    )
+
+    setup_success = await async_setup_entry(hass, entry)
+    assert setup_success is True
+
+    coord_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = coord_data["coordinator"]
+    assert coordinator.sm.data.state == "idle"
+
+    # Aseta unavailable ja unknown -> varmista ettei tila muutu eikä kaadu
+    hass.states.set("sensor.test_power", "unavailable")
+    assert coordinator.sm.data.state == "idle"
+
+    hass.states.set("sensor.test_power", "unknown")
+    assert coordinator.sm.data.state == "idle"
+
+    # Aseta teho 120.0 -> varmista että _transition_unsub ajastetaan hass._scheduled_callbacks-listaan
+    hass.states.set("sensor.test_power", "120.0")
+    assert coordinator.sm.data.state == "idle"
+    assert coordinator._transition_unsub is not None
+    assert len(hass._scheduled_callbacks) > 0
+    assert any(
+        cb[1] == coordinator._async_check_delayed_transition
+        for cb in hass._scheduled_callbacks
+    )
+
+    # Testaa coordinator.update_config(entry) uusilla options-arvoilla lennosta
+    entry.options = {
+        CONF_STARTING_POWER: 25.0,
+        CONF_FINISHING_POWER: 5.0,
+        CONF_STARTING_DELAY: 15.0,
+        CONF_FINISHING_DELAY: 20.0,
+        CONF_NOTIFY_SERVICE: "notify.mobile_app_custom",
+        CONF_ENABLE_ACTIONABLE_NOTIFICATIONS: False,
+        CONF_QUIET_HOURS_START: "22:00",
+        CONF_QUIET_HOURS_END: "07:00",
+        CONF_REMINDER_INTERVAL: 30,
+    }
+    coordinator.update_config(entry)
+    assert coordinator.notify_service == "notify.mobile_app_custom"
+    assert coordinator.enable_notifications is False
+    assert coordinator.quiet_hours_start == "22:00"
+    assert coordinator.quiet_hours_end == "07:00"
+    assert coordinator.reminder_interval == 30.0
+    assert coordinator.sm.starting_power == 25.0
+    assert coordinator.sm.finishing_power == 5.0
+    assert coordinator.sm.starting_delay == 15.0
+    assert coordinator.sm.finishing_delay == 20.0
+
+    # Testaa palvelu clear_history
+    coordinator.engine.register_program("TestiOhjelma")
+    assert "TestiOhjelma" in coordinator.engine.profiles
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_history",
+        {"entry_id": entry.entry_id},
+    )
+    assert len(coordinator.engine.profiles) == 0
+    assert len(coordinator.engine.history) == 0
+
     unload_success = await async_unload_entry(hass, entry)
     assert unload_success is True
