@@ -382,3 +382,51 @@ async def test_options_flow():
     assert res_ok["type"] == "create_entry"
     assert res_ok["data"][CONF_STARTING_POWER] == 30.0
     assert res_ok["data"][CONF_QUIET_HOURS_START] == "23:00"
+
+
+@pytest.mark.asyncio
+async def test_paused_cycle_early_naming_and_diagnostics(coordinator_setup):
+    """Test naming/resetting during paused waiting state and diagnostics export."""
+    from custom_components.appliance_monitor.diagnostics import (
+        async_get_config_entry_diagnostics,
+    )
+
+    hass, entry, coordinator = coordinator_setup
+    sm = coordinator.sm
+
+    # Käynnistä sykli ja aja 46 minuuttia (2760 s) huuhtelua (0.08 kWh)
+    sm.update_power(50.0, 100.0, energy_kwh=9.00)
+    sm.update_power(50.0, 165.0, energy_kwh=9.00)
+    assert sm.data.state == STATE_RUNNING
+
+    # Etene 60s askeleilla
+    t = 165.0
+    for _ in range(45):
+        t += 60.0
+        sm.update_power(80.0, t, energy_kwh=9.08)
+
+    # Teho tippuu nollaan -> tila PAUSED (finishing_delay vielä kesken)
+    t += 10.0
+    sm.update_power(0.0, t, energy_kwh=9.08)
+    assert sm.data.state == STATE_PAUSED
+    assert sm.data.last_completed_cycle is None
+
+    # Käyttäjä syöttää ohjelmanimen "Huuhtelu" jo paused-tilassa ja painaa heti perään Reset
+    text_entity = ApplianceProgramText(coordinator, entry)
+    text_entity.async_write_ha_state = lambda: None
+    await text_entity.async_set_value("Huuhtelu")
+
+    reset_btn = ApplianceResetButton(coordinator, entry)
+    await reset_btn.async_press()
+
+    assert sm.data.state == STATE_IDLE
+    assert "Huuhtelu" in coordinator.engine.profiles
+    prof = coordinator.engine.profiles["Huuhtelu"]
+    assert prof.sample_count == 1
+    assert prof.avg_duration_seconds > 2000.0
+    assert abs(prof.avg_total_energy_kwh - 0.08) < 0.001
+
+    # Tarkista diagnostics.py
+    diag = await async_get_config_entry_diagnostics(hass, entry)
+    assert diag["entry"]["title"] == "Testipesukone"
+    assert "Huuhtelu" in diag["learned_data"]["profiles"]

@@ -287,8 +287,22 @@ class ApplianceStateMachine:
             _LOGGER.exception("Failed to restore active cycle state")
             return False
 
+    def get_or_finalize_cycle_for_learning(self) -> CycleSnapshot | None:
+        """Return last completed cycle, or finalize an active/paused cycle if user acts early."""
+        if self._current_snapshot and self._current_snapshot.duration_seconds > 0:
+            if self._below_threshold_since is not None and self._last_update_time is not None:
+                below_dur = max(0.0, self._last_update_time - self._below_threshold_since)
+                self._current_snapshot.duration_seconds = max(
+                    1.0, self._current_snapshot.duration_seconds - min(below_dur, self.finishing_delay)
+                )
+            self.data.cycle_duration_seconds = self._current_snapshot.duration_seconds
+            self.data.last_completed_cycle = self._current_snapshot
+        return self.data.last_completed_cycle
+
     def reset_to_idle(self) -> None:
-        """Reset finished state back to idle (e.g. user unloaded appliance)."""
+        """Reset finished or paused state back to idle while preserving completed cycle data."""
+        if self._current_snapshot and self._current_snapshot.duration_seconds > 0:
+            self.get_or_finalize_cycle_for_learning()
         self.data.state, self.data.phase = STATE_IDLE, PHASE_IDLE
         self.data.estimated_remaining_seconds = None
         self._above_threshold_since = self._below_threshold_since = self._current_snapshot = None

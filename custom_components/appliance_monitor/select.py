@@ -58,9 +58,9 @@ class ApplianceProgramSelect(ApplianceBaseEntity, SelectEntity):
         return self._current_selection
 
     async def async_select_option(self, option: str) -> None:
-        """User selected a program for the last cycle."""
+        """User selected a program for the last or currently paused cycle."""
         self._current_selection = option
-        last_cycle = self.coordinator.sm.data.last_completed_cycle
+        last_cycle = self.coordinator.sm.get_or_finalize_cycle_for_learning()
         if last_cycle:
             await self.coordinator.async_learn_cycle(last_cycle, option)
             _LOGGER.info("User confirmed cycle program as %s", option)

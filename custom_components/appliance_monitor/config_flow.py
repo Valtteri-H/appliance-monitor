@@ -169,8 +169,16 @@ class ApplianceMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class ApplianceMonitorOptionsFlow(config_entries.OptionsFlow):
     """Handle options for Appliance Monitor."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
+    def __init__(self, config_entry: config_entries.ConfigEntry | None = None) -> None:
+        self._entry = config_entry
+
+    @property
+    def _active_entry(self) -> config_entries.ConfigEntry:
+        try:
+            return self.config_entry
+        except AttributeError:
+            assert self._entry is not None
+            return self._entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -182,7 +190,8 @@ class ApplianceMonitorOptionsFlow(config_entries.OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
-        current = {**(self.config_entry.options or self.config_entry.data), **(user_input or {})}
+        entry = self._active_entry
+        current = {**(entry.options or entry.data), **(user_input or {})}
 
         options_schema = vol.Schema(
             {

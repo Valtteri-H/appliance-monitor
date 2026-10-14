@@ -9,6 +9,7 @@ class SensorDeviceClass(StrEnum):
 
 class SensorStateClass(StrEnum):
     MEASUREMENT = "measurement"
+    TOTAL = "total"
     TOTAL_INCREASING = "total_increasing"
 
 class SensorEntity:

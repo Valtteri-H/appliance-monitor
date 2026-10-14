@@ -159,7 +159,7 @@ class ApplianceEnergySensor(ApplianceBaseEntity, SensorEntity):
     _attr_translation_key = "cycle_energy"
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_state_class = SensorStateClass.TOTAL
 
     def __init__(self, coordinator: Any, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry)
